@@ -68,13 +68,6 @@ def get_store_data(driver:WebDriver, scroll_container: WebElement, file: TextIOW
     wrapper_html = get_store_li[index].get_attribute('innerHTML')
     wrapper_soup = BeautifulSoup(wrapper_html, "html.parser")
 
-    tempVar = wrapper_soup.find("div",attrs={"class": "_3TD7R"})
-    tempVar2 = wrapper_soup.find("div",attrs={"class": "XNxh9"})
-
-    # 썸네일이 있는 검색 li이면
-    if tempVar != None or tempVar2 != None:
-      selectorArgument = 'div:nth-of-type(2) > a:nth-of-type(1) > div'
-
     # 매장 항목 클릭
     get_store_li[index].find_element_by_css_selector(selectorArgument).click()
 
