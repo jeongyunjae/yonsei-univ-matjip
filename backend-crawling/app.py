@@ -13,13 +13,13 @@ app = Flask(__name__)
 
 def file_creating():
   file = open('./src/list.csv', 'w', encoding='utf-8')
-  file.write("name" + "|" + "address" + "\n")
+  file.write("store_name" + "|" + "address" +  "|" + "naver_category" + "\n")
   file.close()
 
 if __name__ == '__main__':
   file_creating()
   naver_crawl()
-  app.run(host='0.0.0.0', port='3060', debug=True, use_reloader=True)
+  # app.run(host='0.0.0.0', port='3060', debug=True, use_reloader=True)
   
   
 
