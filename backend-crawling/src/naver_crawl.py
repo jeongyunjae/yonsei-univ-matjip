@@ -55,29 +55,58 @@ def to_search_iframe(driver:WebDriver):
   driver.switch_to.default_content()
   driver.switch_to.frame('searchIframe')
 
+# element 텍스트 추출
+def get_element_to_text(element):
+  return BeautifulSoup(element, "html.parser").get_text()
+
 # 매장정보 추출
 def get_store_data(driver:WebDriver, scroll_container: WebElement, file: TextIOWrapper):
   get_store_li = scroll_container.find_elements_by_css_selector('ul > li')
   
   for index in range(len(get_store_li)):
-    get_store_li[index].find_element_by_css_selector('div:nth-child(1)').click()
+    selectorArgument = 'div:nth-of-type(1) > a'
+    wrapper_html = get_store_li[index].get_attribute('innerHTML')
+    wrapper_soup = BeautifulSoup(wrapper_html, "html.parser")
+
+    tempVar = wrapper_soup.find("div",attrs={"class": "_3TD7R"})
+    tempVar2 = wrapper_soup.find("div",attrs={"class": "XNxh9"})
+
+    # 썸네일이 있는 검색 li이면
+    if tempVar != None or tempVar2 != None:
+      selectorArgument = 'div:nth-of-type(2) > a:nth-of-type(1) > div'
+
+    # 매장 항목 클릭
+    get_store_li[index].find_element_by_css_selector(selectorArgument).click()
+
+    # 매장 상세로 iframe 이동
     driver.switch_to.default_content()
     driver.switch_to.frame('entryIframe')
-    
-    time.sleep(2)
+
+    time.sleep(1)
+
     try:
       try: 
         WebDriverWait(driver,5).until(EC.presence_of_element_located((By.CLASS_NAME, "place_didmount")))
       except TimeoutException:
         to_search_iframe(driver)
 
-      title_element = driver.find_element_by_css_selector('#_title > span:nth-child(1)').get_attribute('innerHTML')
-      address_element = driver.find_element_by_css_selector('div.place_section_content > ul >li:nth-child(2) > div > a > span').get_attribute('innerHTML')
+      # 매장명 element 추출
+      store_name = driver.find_element_by_css_selector('#_title > span:nth-child(1)').get_attribute('innerHTML')
 
-      title = BeautifulSoup(title_element, "html.parser").get_text()
-      address = BeautifulSoup(address_element, "html.parser").get_text()
+      # 네이버 카테고리 element 추출
+      if driver.find_element_by_css_selector('#_title > span._3ocDE').is_displayed():
+        naver_category = driver.find_element_by_css_selector('#_title > span._3ocDE').get_attribute('innerHTML')
+      else:
+        naver_category = ''
+      
+      # 매장주소 element 추출
+      address = driver.find_element_by_css_selector('.place_section_content > ul ._2yqUQ').get_attribute('innerHTML')
 
-      file.write(title + "|" + address + "\n")
+      store_name = get_element_to_text(store_name)
+      address = get_element_to_text(address)
+      naver_category = get_element_to_text(naver_category)
+
+      file.write(store_name + "|" + address + "|" + naver_category + "\n")
       to_search_iframe(driver)
     except TimeoutException:
       to_search_iframe(driver)
@@ -100,7 +129,7 @@ def naver_crawl():
       for i in range(6):
         # 자바 스크립트 실행
         driver.execute_script("arguments[0].scrollBy(0,2000)",scroll_container)
-        time.sleep(1)
+        time.sleep(0.5)
       get_store_data(driver,scroll_container,filer)
       is_continue = next_page_move(driver)
       if is_continue == False:
